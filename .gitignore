@@ -1,0 +1,11 @@
+# Java and Maven build output
+target/
+**/target/
+
+# IDE metadata
+.idea/
+*.iml
+.vscode/
+
+# macOS
+.DS_Store
