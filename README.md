@@ -3,15 +3,15 @@
 Web-based vehicle racing simulation platform developed for CMPE 195A/195B.
 
 Development is intentionally incremental. The first component is a standalone,
-deterministic Java simulation engine. The backend, database, frontend,
-authentication, external APIs, and AI explanation layer will be added in later
-milestones.
+deterministic Java simulation engine. An independent Spring Boot and PostgreSQL
+vehicle-catalog foundation is now in place. The frontend, authentication,
+external APIs, and AI explanation layer will be added in later milestones.
 
 ## Current project structure
 
 ```text
 Race Simulator/
-├── Backend              Backend placeholder owned by the backend team
+├── Backend/             Spring Boot API and PostgreSQL vehicle catalog
 ├── Frontend             Frontend placeholder owned by the frontend team
 └── simulation-engine/   Physics model and automated tests
 ```
@@ -58,6 +58,22 @@ This is a transparent baseline model, not a claim of final real-world accuracy.
 Launch behavior, tire behavior beyond the current longitudinal slip approximation,
 shift strategy, powertrain inertia, turbocharger response, and broader validation
 against published vehicle data remain areas for refinement.
+
+## Run the backend
+
+The backend currently provides the independent PostgreSQL foundation for the
+vehicle catalog. It does not yet depend on or call the simulation engine.
+
+Requirements: Java 21 or newer, Maven 3.9 or newer, and Docker Compose.
+
+```bash
+cd Backend
+docker compose up -d
+mvn spring-boot:run
+```
+
+See [`Backend/README.md`](Backend/README.md) for the available endpoints and
+configuration options.
 
 ## Run the engine tests
 

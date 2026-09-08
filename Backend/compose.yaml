@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: race-simulator-postgres
+    environment:
+      POSTGRES_DB: race_simulator
+      POSTGRES_USER: race_user
+      POSTGRES_PASSWORD: race_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - race-simulator-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U race_user -d race_simulator"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  race-simulator-postgres-data:

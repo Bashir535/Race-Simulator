@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: race-simulator-backend
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/race_simulator}
+    username: ${DATABASE_USERNAME:race_user}
+    password: ${DATABASE_PASSWORD:race_password}
+  flyway:
+    enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+server:
+  port: ${SERVER_PORT:8080}
