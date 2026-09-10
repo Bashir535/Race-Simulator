@@ -4,15 +4,17 @@ Web-based vehicle racing simulation platform developed for CMPE 195A/195B.
 
 Development is intentionally incremental. The first component is a standalone,
 deterministic Java simulation engine. An independent Spring Boot and PostgreSQL
-vehicle-catalog foundation is now in place. The frontend, authentication,
-external APIs, and AI explanation layer will be added in later milestones.
+vehicle-catalog foundation is now in place. A `Frontend/` module has been
+created for the frontend team; its toolchain is not yet scaffolded.
+Authentication, external APIs, and the AI explanation layer will be added in
+later milestones.
 
 ## Current project structure
 
 ```text
 Race Simulator/
 ├── Backend/             Spring Boot API and PostgreSQL vehicle catalog
-├── Frontend             Frontend placeholder owned by the frontend team
+├── Frontend/            Web client owned by the frontend team
 └── simulation-engine/   Physics model and automated tests
 ```
 
