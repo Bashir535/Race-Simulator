@@ -334,68 +334,20 @@ The following were verified on September 16, 2026:
 - All 16 engine tests passed.
 - All 3 backend tests passed, including the PostgreSQL/Testcontainers integration test.
 
-The exact integration-test result is more important than the sample race times:
+The exact integration test result is more important than the sample race times:
 it proves a clean PostgreSQL instance can run every migration, load the seed
-data, map both vehicles into the engine, complete a race, and return telemetry.
+data, map both vehicles into the engine, and complete a race.
 
-## 11. Problems found and corrected
 
-### PostgreSQL was unavailable
-
-Spring originally failed because Docker Desktop was not running, so PostgreSQL
-could not be reached. Starting Docker and the Compose service resolved it.
-
-### Schema numeric types did not match Java types
-
-PostgreSQL `NUMERIC` columns conflicted with Hibernate's expected type for Java
-`double`/`Double`. Migration V6 converts simulation measurements to `DOUBLE
-PRECISION`, matching the in-memory numerical model while retaining schema
-validation.
-
-### Multiple collection fetches
-
-The original detail graph attempted to join-fetch several ordered `List`
-collections at once. Hibernate rejected that with `MultipleBagFetchException`.
-The query now fetches the aggregate's to-one relationships and loads ordered
-child collections within the read-only service transaction.
-
-### Port and working-directory confusion
-
-Jenkins already uses IPv4 port 8080 locally, so port 8081 is recommended. The
-Spring Boot command must also run from the `Backend` directory, not the reactor
-root.
-
-## 12. Recommended next backend increments
+## 11. Recommended next backend increments
 
 1. Share and freeze the current catalog and race API contract with the frontend team.
-2. Add OpenAPI/Swagger documentation for interactive endpoint discovery.
-3. Add an ingestion boundary for external vehicle providers without coupling provider payloads to domain tables.
+2. Add OpenAPI/Swagger documentation for endpoint discovery.
+3. Add an boundary for external vehicle providers without coupling provider payloads to domain tables.
 4. Expand source provenance and add an approval workflow before imported data becomes simulation-ready.
 5. Add additional validated vehicle fixtures across FWD, RWD, AWD, manual, automatic, and dual-clutch layouts.
 6. Add saved race and garage persistence after the core anonymous workflow is stable.
 7. Add authentication and user ownership after those persistence contracts are agreed upon.
 8. Add AI result explanations only after the deterministic result payload is stable.
 
-## 13. Commit and pull-request guidance
 
-This increment is ready for a team review because the application starts, the
-end-to-end API works, and all automated tests pass. It should be submitted as a
-focused backend-integration branch or pull request.
-
-Before committing:
-
-- include backend Java sources, tests, migrations, Maven files, and documentation;
-- include the repository-level `pom.xml` that joins the modules;
-- do not include any `target/` directories;
-- do not include temporary Office files whose names begin with `~$`;
-- review generated `output/` documents separately before deciding whether they belong in source control; and
-- review the existing uncommitted `simulation-engine/RaceSimulator.java` change separately because it predates this backend increment.
-
-A clear pull-request title would be:
-
-```text
-Integrate PostgreSQL vehicle catalog with deterministic race API
-```
-
-The pull-request description should mention the API contract, migrations,
-seeded development fixtures, engine mapping, test results, and deferred features.
