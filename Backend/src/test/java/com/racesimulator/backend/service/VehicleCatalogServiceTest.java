@@ -3,6 +3,7 @@ package com.racesimulator.backend.service;
 import com.racesimulator.backend.entity.VehicleMake;
 import com.racesimulator.backend.repository.VehicleMakeRepository;
 import com.racesimulator.backend.repository.VehicleModelRepository;
+import com.racesimulator.backend.repository.VehicleTrimRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,6 +24,9 @@ class VehicleCatalogServiceTest {
 
     @Mock
     private VehicleModelRepository modelRepository;
+
+    @Mock
+    private VehicleTrimRepository trimRepository;
 
     @InjectMocks
     private VehicleCatalogService service;

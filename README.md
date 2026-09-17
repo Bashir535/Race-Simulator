@@ -2,15 +2,16 @@
 
 Web-based vehicle racing simulation platform developed for CMPE 195A/195B.
 
-Development is intentionally incremental. The first component is a standalone,
-deterministic Java simulation engine. An independent Spring Boot and PostgreSQL
-vehicle-catalog foundation is now in place. The frontend, authentication,
-external APIs, and AI explanation layer will be added in later milestones.
+Development is intentionally incremental. The deterministic Java simulation
+engine is now connected to the Spring Boot and PostgreSQL backend through the
+first end-to-end race API. The frontend, authentication, external data import,
+garage, and AI explanation layer remain later milestones.
 
 ## Current project structure
 
 ```text
 Race Simulator/
+├── pom.xml              Maven reactor joining the engine and backend
 ├── Backend/             Spring Boot API and PostgreSQL vehicle catalog
 ├── Frontend             Frontend placeholder owned by the frontend team
 └── simulation-engine/   Physics model and automated tests
@@ -59,27 +60,40 @@ Launch behavior, tire behavior beyond the current longitudinal slip approximatio
 shift strategy, powertrain inertia, turbocharger response, and broader validation
 against published vehicle data remain areas for refinement.
 
-## Run the backend
+## Backend integration
 
-The backend currently provides the independent PostgreSQL foundation for the
-vehicle catalog. It does not yet depend on or call the simulation engine.
+The backend stores normalized vehicle, engine, transmission, torque-curve,
+simulation-specification, performance-benchmark, and source-provenance data.
+Its race service maps a saved vehicle specification into the engine's domain
+model and returns deterministic results plus synchronized animation telemetry.
+
+The main integration endpoint is:
+
+```text
+POST /api/v1/races/simulate
+```
+
+Catalog endpoints provide the year/make/model/trim discovery flow, popular
+vehicles, and complete vehicle details. See [`Backend/README.md`](Backend/README.md)
+for request examples and the full endpoint list.
+
+## Run the backend
 
 Requirements: Java 21 or newer, Maven 3.9 or newer, and Docker Compose.
 
 ```bash
-cd Backend
-docker compose up -d
+mvn install -DskipTests
+cd Backend && docker compose up -d
 mvn spring-boot:run
 ```
 
-See [`Backend/README.md`](Backend/README.md) for the available endpoints and
-configuration options.
-
-## Run the engine tests
+## Run all tests
 
 Requirements: Java 21 or newer and Maven 3.9 or newer.
 
 ```bash
-cd simulation-engine
 mvn test
 ```
+
+The backend's PostgreSQL integration test runs through Testcontainers when
+Docker is available. Engine and backend service tests do not require Docker.
