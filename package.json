@@ -1,0 +1,26 @@
+{
+  "name": "race-simulator-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config Frontend/vite.config.js",
+    "build": "vite build --config Frontend/vite.config.js",
+    "preview": "vite preview --config Frontend/vite.config.js",
+    "check:ui": "node Frontend/check-ui.mjs",
+    "typecheck": "tsc --noEmit --project Frontend/tsconfig.json",
+    "check": "npm run typecheck && npm run check:ui && npm test && npm run build",
+    "test": "node Frontend/test/run.mjs"
+  },
+  "dependencies": {
+    "lucide-react": "^1.43.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "recharts": "^3.10.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@vitejs/plugin-react": "^5.1.0",
+    "typescript": "^5.9.0",
+    "vite": "^7.1.0"
+  }
+}

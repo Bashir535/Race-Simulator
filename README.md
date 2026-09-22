@@ -4,8 +4,9 @@ Web-based vehicle racing simulation platform developed for CMPE 195A/195B.
 
 Development is intentionally incremental. The deterministic Java simulation
 engine is now connected to the Spring Boot and PostgreSQL backend through the
-first end-to-end race API. The frontend, authentication, external data import,
-garage, and AI explanation layer remain later milestones.
+first end-to-end race API, and the web client consumes that API for both the
+vehicle catalog and race playback. Authentication, external data import, and
+the saved garage remain later milestones.
 
 ## Current project structure
 
@@ -13,7 +14,7 @@ garage, and AI explanation layer remain later milestones.
 Race Simulator/
 ├── pom.xml              Maven reactor joining the engine and backend
 ├── Backend/             Spring Boot API and PostgreSQL vehicle catalog
-├── Frontend             Frontend placeholder owned by the frontend team
+├── Frontend/            Web client owned by the frontend team
 └── simulation-engine/   Physics model and automated tests
 ```
 
