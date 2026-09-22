@@ -1,0 +1,85 @@
+RevMatch — Frontend module
+==========================
+
+Owner: Jason Navarro  <jt.navarro199@gmail.com>
+
+This file records who owns this module and what the frontend work covers, so
+the split of responsibilities across the repo is clear at a glance.
+
+Module boundary
+---------------
+Jason Navarro owns everything under Frontend/. The other modules are owned by
+other members of the team:
+
+  simulation-engine/   Bashir Moamer   deterministic Java race physics
+  Backend/             Nishad          Spring Boot API, Postgres, Flyway
+
+No file outside Frontend/ is modified by this module, apart from the
+repository-root package.json and package-lock.json, which are the frontend's
+own npm manifest and lockfile.
+
+
+Scope of the frontend work
+--------------------------
+RevMatch is the web client: a two-lane drag racing front end that picks a pair
+of cars out of the backend catalog, races them on the simulation engine, and
+plays back the result.
+
+  * Vite + React application, mounted from src/main.jsx into src/index.html.
+    Components are JSX; the API and model layer is TypeScript under strict mode.
+
+  * API client (src/lib/api/). types.ts mirrors the backend DTOs one for one.
+    client.ts is the only place in the app that calls the API: it covers all
+    seven endpoints, checks response.ok, parses the ApiErrorResponse envelope,
+    preserves correlationId, separates HTTP failures from network failures,
+    supports cancellation, and shares identical in-flight GETs so React's
+    double-mounted effects do not issue duplicate requests.
+
+  * Dragstrip tab. Two lanes, each choosing a vehicle through a
+    Year -> Make -> Model -> Trim cascade backed by the catalog endpoints, with
+    the trim's specifications read from GET /vehicles/{trimId}. A staging tree
+    counts down before launch, an animated parallax track carries a lane per
+    car, and per-lane gauges show speed, RPM, gear and acceleration.
+
+  * Garage tab. Vehicles saved to localStorage as trim references, loadable
+    back into either lane, alongside the catalog's popular list. Specifications
+    are never copied into storage: they are re-read from the backend, so a
+    saved entry cannot drift away from the catalog.
+
+  * Race and playback (src/lib/raceModel.ts, src/hooks/usePlayback.ts). Races
+    run on the Java engine behind POST /api/v1/races/simulate. The response is
+    a completed deterministic result, so playback is a recording rather than a
+    live calculation: a requestAnimationFrame clock writes positions and gauge
+    values straight to the DOM through refs, keeping a twelve second race to a
+    handful of React renders. Interpolation between adjacent backend frames is
+    a drawing convenience and can never produce a value the engine did not
+    bracket. The response is never mutated. Start, pause, resume, replay and
+    reset are supported, and playback is skipped when the viewer prefers
+    reduced motion.
+
+  * Units (src/lib/units.ts). The backend speaks SI. Every conversion to the
+    units the UI shows lives in this one module. Converted values are for
+    display only and are never fed back into a race request.
+
+  * Design system (src/theme.js). Shared color, type and radius tokens.
+    check-ui.mjs enforces two rules across the module: every corner stays
+    square, and no component hard-codes a font or radius instead of using a
+    token.
+
+  * Tests (test/). Two suites covering the parts that can be checked without a
+    backend: how the client talks to a server, and how the playback model reads
+    a race timeline. Run with npm test.
+
+The frontend contains no physics and no vehicle data of its own. If a number
+describes a car or how it moves, the backend supplied it.
+
+
+Catalog coverage
+----------------
+Two of the four seeded models currently carry simulation-ready trims: the Ford
+Mustang GT Performance Package and the Chevrolet Corvette Stingray Z51. The
+Honda Civic Type R and Volkswagen Golf R exist as makes, models and
+generations but have no trim, engine, transmission or specification rows, so
+they cannot yet be selected or raced. Seeding them is a backend migration; the
+frontend renders whatever the catalog returns and needs no change when they
+land.
