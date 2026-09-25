@@ -2,7 +2,7 @@
 
 Web-based vehicle racing simulation platform developed for CMPE 195A/195B.
 
-Development is intentionally incremental. The deterministic Java simulation
+Development is intentionally incremental. The Java simulation
 engine is now connected to the Spring Boot and PostgreSQL backend through the
 first end-to-end race API, and the web client consumes that API for both the
 vehicle catalog and race playback. Authentication, external data import, and
