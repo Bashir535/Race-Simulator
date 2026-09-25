@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, ReferenceLine,
+  ResponsiveContainer,
 } from "recharts";
 import {
   Flag, Gauge, Play, Pause, Repeat, RotateCcw, Car, Warehouse,
@@ -284,6 +284,13 @@ export default function RevMatch() {
 
     clearTimers();
     abortRef.current?.abort();
+    /* A completed playback stays in the "finished" state. Return it and all
+     * imperative displays to the starting line before requesting another
+     * simulation, otherwise the new response cannot auto-start. */
+    restartPlayback();
+    laneARef.current?.setProgress(0);
+    laneBRef.current?.setProgress(0);
+    trackRef.current?.setProgress(0);
     const controller = new AbortController();
     abortRef.current = controller;
 
@@ -388,7 +395,6 @@ export default function RevMatch() {
       t: +row.t.toFixed(2),
       vA: mpsToMph(row.speedA),
       vB: mpsToMph(row.speedB),
-      gap: +row.gap.toFixed(2),
     }));
   }, [response]);
 
@@ -616,7 +622,7 @@ export default function RevMatch() {
             {resultsVisible && <RaceResults response={response} />}
 
             {resultsVisible && response && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }} className="rb-grid">
+              <div style={{ maxWidth: 760, margin: "0 auto 20px" }}>
                 <div style={{
                   background: C.panel, border: `1px solid ${C.line}`, borderRadius: RADIUS,
                   padding: "16px 8px 8px 0", boxShadow: "0 1px 3px #12384a14",
@@ -632,24 +638,6 @@ export default function RevMatch() {
                       <Tooltip contentStyle={{ background: C.panelAlt, border: `1px solid ${C.line}`, fontSize: 12 }} />
                       <Line type="monotone" dataKey="vA" stroke={C.orange} strokeWidth={2} dot={false} name={nameA} isAnimationActive={false} />
                       <Line type="monotone" dataKey="vB" stroke={C.cyan} strokeWidth={2} dot={false} name={nameB} isAnimationActive={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-                <div style={{
-                  background: C.panel, border: `1px solid ${C.line}`, borderRadius: RADIUS,
-                  padding: "16px 8px 8px 0", boxShadow: "0 1px 3px #12384a14",
-                }}>
-                  <div style={{ fontSize: 12, color: C.dim, padding: "0 16px 8px", fontFamily: F.mono }}>
-                    DISTANCE GAP ({nameA} ahead is positive)
-                  </div>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <LineChart data={chartData}>
-                      <CartesianGrid stroke={C.line} strokeDasharray="3 3" />
-                      <XAxis dataKey="t" stroke={C.dim} fontSize={11} unit="s" />
-                      <YAxis stroke={C.dim} fontSize={11} unit="m" width={50} />
-                      <ReferenceLine y={0} stroke={C.dim} strokeDasharray="4 4" />
-                      <Tooltip contentStyle={{ background: C.panelAlt, border: `1px solid ${C.line}`, fontSize: 12 }} />
-                      <Line type="monotone" dataKey="gap" stroke={C.amberInk} strokeWidth={2} dot={false} isAnimationActive={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
