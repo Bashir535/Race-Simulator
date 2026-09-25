@@ -32,13 +32,17 @@ class RaceSimulationIntegrationTest {
     @Autowired VehicleTrimRepository trimRepository;
 
     @Test
-    void migrationsSeedTwoVehiclesAndEngineRunsQuarterMile() {
+    void migrationsSeedFourVehiclesAndEngineRunsQuarterMileMatchups() {
         var vehicles = trimRepository.findAllByPopularTrueOrderByModelYearDesc();
-        assertThat(vehicles).hasSize(2);
+        assertThat(vehicles).hasSize(4);
 
         var mustang = vehicles.stream().filter(vehicle -> vehicle.getTrimName().contains("GT Performance"))
                 .findFirst().orElseThrow();
         var corvette = vehicles.stream().filter(vehicle -> vehicle.getTrimName().contains("Stingray"))
+                .findFirst().orElseThrow();
+        var civic = vehicles.stream().filter(vehicle -> vehicle.getTrimName().contains("Type R"))
+                .findFirst().orElseThrow();
+        var golf = vehicles.stream().filter(vehicle -> vehicle.getTrimName().equals("R (7DSG)"))
                 .findFirst().orElseThrow();
 
         var request = new RaceRequest(
@@ -61,5 +65,24 @@ class RaceSimulationIntegrationTest {
         assertThat(response.timeline().getFirst().timeSeconds()).isZero();
         assertThat(response.timeline().getLast().vehicleA().distanceMeters()).isGreaterThanOrEqualTo(402.336);
         assertThat(response.timeline().getLast().vehicleB().distanceMeters()).isGreaterThanOrEqualTo(402.336);
+
+        var hatchbackResponse = simulationService.simulate(new RaceRequest(
+                civic.getId(),
+                golf.getId(),
+                new RaceRequest.RaceConfiguration(
+                        RaceRequest.GoalType.DISTANCE,
+                        402.336,
+                        null,
+                        0.0,
+                        RoadSurface.PREPARED_DRAG_STRIP,
+                        null)));
+
+        assertThat(hatchbackResponse.winner()).contains("Golf R");
+        assertThat(hatchbackResponse.vehicleA().milestones()).extracting("name")
+                .contains("0-60 mph", "1/8 mile");
+        assertThat(hatchbackResponse.vehicleB().milestones()).extracting("name")
+                .contains("0-60 mph", "1/8 mile");
+        assertThat(hatchbackResponse.vehicleA().shifts()).isNotEmpty();
+        assertThat(hatchbackResponse.vehicleB().shifts()).isNotEmpty();
     }
 }
