@@ -76,6 +76,27 @@ class RealVehicleValidationTest {
                 .allMatch(frame -> frame.vehicleB().wheelSlipRatio() <= 0.10));
     }
 
+    @Test
+    void golfRRollRaceUsesSequentialEffectiveRatiosAndRealisticPerformance() {
+        var golf = RealVehicleFixtures.golfRDualClutch();
+        for (int index = 1; index < golf.gearRatios().size(); index++) {
+            assertTrue(golf.gearRatios().get(index) < golf.gearRatios().get(index - 1),
+                    "Effective DSG ratios must decrease with each higher gear");
+        }
+
+        RaceResult race = simulator.simulate(
+                golf,
+                golf,
+                RaceConfig.rollRace(40.0 * 0.44704, 120.0 * 0.44704,
+                        RoadSurface.DRY_ASPHALT));
+
+        System.out.printf("Golf R 40-120 mph validation: %.2f s%n",
+                race.vehicleA().finishTimeSeconds());
+        assertTrue(race.vehicleA().finishTimeSeconds() >= 9.0);
+        assertTrue(race.vehicleA().finishTimeSeconds() <= 15.0);
+        assertTrue(race.timeline().getFirst().vehicleA().engineRpm() < golf.shiftRpm());
+    }
+
     private static void assertValidReport(ValidationReport report) {
         assertEquals(5, report.comparisons().size());
         assertTrue(report.comparisons().stream()

@@ -4,7 +4,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import {
-  Flag, Gauge, Play, Pause, Repeat, RotateCcw, Car, Warehouse,
+  Flag, Gauge, Play, Pause, Repeat, RotateCcw, Warehouse,
 } from "lucide-react";
 
 import { C, F, RADIUS, inputStyle } from "./theme.js";
@@ -33,6 +33,34 @@ import { Announcer, ErrorBlock } from "./components/States.jsx";
 const STAGE_HOLD_MS = 700;
 const AMBER_INTERVAL_MS = 600;
 const GREEN_HOLD_MS = 500;
+
+function RaceCarIcon({ color, name }) {
+  return (
+    <svg
+      width="82"
+      height="34"
+      viewBox="0 0 164 68"
+      role="img"
+      aria-label={`${name} race car`}
+      style={{ display: "block", filter: "drop-shadow(0 4px 3px #00000066)" }}
+    >
+      <path
+        d="M9 43 20 31l25-5 18-17h45l25 19 17 4c6 2 10 7 10 13v7h-14a19 19 0 0 0-37 0H57a19 19 0 0 0-37 0H7v-6c0-1 1-2 2-3Z"
+        fill={color}
+        stroke="#ffffffdd"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+      <path d="m52 25 15-13h17v13Zm38 0V12h16l18 13Z" fill="#bfe9f5" opacity=".9" />
+      <path d="M133 32h15l6 5h-19Z" fill="#ffd36b" />
+      <path d="M8 42h10" stroke="#ff5a4f" strokeWidth="4" strokeLinecap="round" />
+      <circle cx="39" cy="51" r="13" fill="#17242b" stroke="#e9f3f6" strokeWidth="3" />
+      <circle cx="39" cy="51" r="5" fill="#788b94" />
+      <circle cx="127" cy="51" r="13" fill="#17242b" stroke="#e9f3f6" strokeWidth="3" />
+      <circle cx="127" cy="51" r="5" fill="#788b94" />
+    </svg>
+  );
+}
 
 function treeLabel(status, stage) {
   if (status === "finished") return "FINISH";
@@ -74,18 +102,12 @@ const Lane = React.forwardRef(function Lane({ name, color, running }, ref) {
       <div
         ref={carRef}
         style={{
-          position: "absolute", top: "50%", left: "calc(0% - 19px)",
+          position: "absolute", top: "50%", left: "calc(0% - 41px)",
           transform: "translateY(-50%)", transition: running ? "none" : "left .35s ease",
           display: "flex", alignItems: "center", gap: 4,
         }}
       >
-        <div style={{
-          width: 38, height: 38, borderRadius: 999, background: color, display: "flex",
-          alignItems: "center", justifyContent: "center",
-          border: "2px solid #ffffffcc", boxShadow: "0 2px 6px #00000055",
-        }}>
-          <Car size={19} color={C.onAccent} aria-hidden="true" />
-        </div>
+        <RaceCarIcon color={color} name={name} />
       </div>
       <div style={{
         position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)",
@@ -202,11 +224,12 @@ export default function RevMatch() {
     if (!current) return;
     const opt = optionRef.current;
     const frames = current.timeline;
+    const finishFrame = frames[frames.length - 1];
 
     const a = telemetryAt(frames, time, "vehicleA");
     const b = telemetryAt(frames, time, "vehicleB");
-    const progressA = progressOf(a, opt);
-    const progressB = progressOf(b, opt);
+    const progressA = progressOf(a, opt, finishFrame?.vehicleA.distanceMeters);
+    const progressB = progressOf(b, opt, finishFrame?.vehicleB.distanceMeters);
 
     laneARef.current?.setProgress(progressA);
     laneBRef.current?.setProgress(progressB);

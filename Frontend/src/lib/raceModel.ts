@@ -116,20 +116,21 @@ export function timelineDuration(response: RaceResponse): number {
 
 /**
  * The scalar each race type uses to place a car on the track, normalised to
- * 0..1. Distance for a drag race; speed travelled through the band for a roll.
+ * 0..1. Both use distance so a real torque interruption during a shift cannot
+ * make the track marker pause or move backwards. For a roll race the finish is
+ * the distance that vehicle covered before reaching the target speed.
  */
 export function progressOf(
   telemetry: VehicleTelemetry,
   option: RaceOption,
+  rollFinishDistanceMeters?: number,
 ): number {
   if (option.kind === "drag") {
     const total = option.distanceMeters || 1;
     return clamp01(telemetry.distanceMeters / total);
   }
-  const start = option.startingSpeedMetersPerSecond;
-  const span = (option.targetSpeedMetersPerSecond ?? start) - start;
-  if (span <= 0) return 0;
-  return clamp01((telemetry.speedMetersPerSecond - start) / span);
+  if (!rollFinishDistanceMeters || rollFinishDistanceMeters <= 0) return 0;
+  return clamp01(telemetry.distanceMeters / rollFinishDistanceMeters);
 }
 
 function clamp01(value: number): number {

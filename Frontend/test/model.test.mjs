@@ -50,8 +50,10 @@ check("drag progress at finish", near(progressOf(tel(402.336, 0, 0, 0, 1), drag)
 check("drag progress clamped", progressOf(tel(9999, 0, 0, 0, 1), drag) === 1);
 
 const roll = RACE_OPTIONS["roll-40-120"];
-check("roll progress at band start", near(progressOf(tel(0, 40 * 0.44704, 0, 0, 1), roll), 0));
-check("roll progress at band end", near(progressOf(tel(0, 120 * 0.44704, 0, 0, 1), roll), 1));
+check("roll progress at start", near(progressOf(tel(0, 40 * 0.44704, 0, 0, 1), roll, 300), 0));
+check("roll progress uses distance", near(progressOf(tel(150, 80 * 0.44704, 0, 0, 1), roll, 300), 0.5));
+check("roll progress at finish", near(progressOf(tel(300, 120 * 0.44704, 0, 0, 1), roll, 300), 1));
+check("roll progress clamps overshoot", progressOf(tel(350, 120 * 0.44704, 0, 0, 1), roll, 300) === 1);
 
 /* --- request shaping -------------------------------------------------- */
 const distReq = buildRaceRequest(1, 2, RACE_OPTIONS["drag-eighth"], "DRY_ASPHALT");

@@ -174,10 +174,10 @@ final class RealVehicleFixtures {
                 1.0,
                 List.of(
                         3.19 * 4.47,
-                        2.75 * 4.47,
-                        1.90 * 4.47,
+                        2.75 * 3.30,
+                        1.90 * 3.30,
                         1.04 * 4.47,
-                        0.79 * 3.30,
+                        0.79 * 4.47,
                         0.86 * 3.30,
                         0.66 * 3.30),
                 TransmissionType.DUAL_CLUTCH,
