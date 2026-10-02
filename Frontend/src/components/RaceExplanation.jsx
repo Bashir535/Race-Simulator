@@ -38,7 +38,7 @@ function describe(response) {
 
   const sixtyA = findMilestone(vehicleA, MILESTONE_ZERO_TO_SIXTY);
   const sixtyB = findMilestone(vehicleB, MILESTONE_ZERO_TO_SIXTY);
-  if (sixtyA && sixtyB) {
+  if (sixtyA && sixtyB && !response.config?.startingSpeedMetersPerSecond) {
     sentences.push(
       `Off the line, ${nameA} reached 60 mph in ${formatSeconds(sixtyA.elapsedSeconds)}s `
       + `against ${formatSeconds(sixtyB.elapsedSeconds)}s for ${nameB}.`,

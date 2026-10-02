@@ -76,6 +76,22 @@ export const ROAD_SURFACES: ReadonlyArray<{ value: RoadSurface; label: string }>
   { value: "GRAVEL", label: "Gravel" },
 ];
 
+/** Distance races use the same finish line for standing and rolling starts. */
+export function distanceRaceOption(distanceMeters: number, startingSpeedMph: number): RaceOption {
+  if (![EIGHTH_MILE_METERS, QUARTER_MILE_METERS].includes(distanceMeters)) {
+    throw new RangeError("Choose an eighth or quarter mile.");
+  }
+  if (!Number.isFinite(startingSpeedMph) || startingSpeedMph < 0 || startingSpeedMph > 70) {
+    throw new RangeError("Starting speed must be between 0 and 70 mph.");
+  }
+  return {
+    label: `${startingSpeedMph === 0 ? "Standing start" : `${startingSpeedMph} mph roll`} · ${distanceMeters === EIGHTH_MILE_METERS ? "⅛" : "¼"} mile`,
+    kind: "drag",
+    distanceMeters,
+    startingSpeedMetersPerSecond: mphToMps(startingSpeedMph),
+  };
+}
+
 /** Builds the exact RaceRequest body the backend validates. */
 export function buildRaceRequest(
   vehicleAId: number,

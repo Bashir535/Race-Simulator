@@ -15,7 +15,7 @@ public record RaceRequest(
             @NotNull GoalType goalType,
             @Positive Double distanceMeters,
             @Positive Double targetSpeedMetersPerSecond,
-            @PositiveOrZero double startingSpeedMetersPerSecond,
+            @PositiveOrZero @DecimalMax(value = "31.2928", message = "Starting speed must not exceed 70 mph") double startingSpeedMetersPerSecond,
             @NotNull RoadSurface roadSurface,
             @Valid Environment environment) {
     }

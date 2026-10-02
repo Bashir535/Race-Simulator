@@ -1,5 +1,5 @@
 const { telemetryAt, progressOf, buildRaceRequest, chartRows, timelineDuration,
-        findMilestone, RACE_OPTIONS } = await import(`${process.env.BUNDLE_DIR}/model.bundle.mjs`);
+        findMilestone, distanceRaceOption, RACE_OPTIONS } = await import(`${process.env.BUNDLE_DIR}/model.bundle.mjs`);
 
 const results = [];
 const check = (n, p, d = "") => results.push({ n, p, d });
@@ -70,6 +70,24 @@ check("no distance on speed race", speedReq.race.distanceMeters === undefined);
 check("trim ids passed through", speedReq.vehicleAId === 5 && speedReq.vehicleBId === 6);
 
 /* --- summary helpers --------------------------------------------------- */
+for (const distance of [201.168, 402.336]) {
+  for (const mph of [0, 5, 40, 70]) {
+    const option = distanceRaceOption(distance, mph);
+    const request = buildRaceRequest(1, 2, option, "GRAVEL");
+    check(`${mph} mph / ${distance}m uses a distance finish`,
+      request.race.goalType === "DISTANCE" && request.race.distanceMeters === distance
+      && near(request.race.startingSpeedMetersPerSecond, mph * 0.44704)
+      && request.race.roadSurface === "GRAVEL" && request.race.targetSpeedMetersPerSecond === undefined);
+    check(`${mph} mph / ${distance}m shares track scale`,
+      near(progressOf(tel(distance / 2, 30, 1, 4000, 3), option), 0.5));
+  }
+}
+for (const mph of [-1, 71, NaN, Infinity]) {
+  let rejected = false;
+  try { distanceRaceOption(402.336, mph); } catch { rejected = true; }
+  check(`rejects invalid starting speed ${mph}`, rejected);
+}
+
 check("duration is last frame", timelineDuration({ timeline: frames }) === 2);
 check("empty timeline duration 0", timelineDuration({ timeline: [] }) === 0);
 

@@ -10,7 +10,7 @@ import {
 import { C, F, RADIUS, inputStyle } from "./theme.js";
 import { ApiError, NetworkError, describeError, isCancelled, simulateRace } from "./lib/api/client.ts";
 import {
-  RACE_OPTIONS, ROAD_SURFACES, buildRaceRequest, chartRows,
+  distanceRaceOption, ROAD_SURFACES, buildRaceRequest, chartRows,
   progressOf, telemetryAt, timelineDuration,
 } from "./lib/raceModel.ts";
 import { mpsToMph } from "./lib/units.ts";
@@ -165,7 +165,8 @@ export default function RevMatch() {
   const laneB = useVehicleSelection();
   const popular = usePopularVehicles();
 
-  const [raceKey, setRaceKey] = useState("drag-quarter");
+  const [distanceMeters, setDistanceMeters] = useState(402.336);
+  const [startingSpeedMph, setStartingSpeedMph] = useState(0);
   const [roadSurface, setRoadSurface] = useState("PREPARED_DRAG_STRIP");
 
   /* The request, kept separate from playback: a race can be simulated and then
@@ -190,11 +191,11 @@ export default function RevMatch() {
   const abortRef = useRef(null);
   /* Read inside the animation loop, which must not close over stale renders. */
   const responseRef = useRef(null);
-  const optionRef = useRef(RACE_OPTIONS[raceKey]);
+  const option = useMemo(() => distanceRaceOption(distanceMeters, startingSpeedMph), [distanceMeters, startingSpeedMph]);
+  const optionRef = useRef(option);
   const redlinesRef = useRef({ a: null, b: null });
 
-  const option = RACE_OPTIONS[raceKey];
-  useEffect(() => { optionRef.current = RACE_OPTIONS[raceKey]; }, [raceKey]);
+  useEffect(() => { optionRef.current = option; }, [option]);
   useEffect(() => { responseRef.current = response; }, [response]);
 
   useEffect(() => {
@@ -325,7 +326,7 @@ export default function RevMatch() {
     hudARef.current?.reset();
     hudBRef.current?.reset();
 
-    const request = buildRaceRequest(trimIdA, trimIdB, RACE_OPTIONS[raceKey], roadSurface);
+    const request = buildRaceRequest(trimIdA, trimIdB, option, roadSurface);
 
     /* Ask the backend while the tree counts down, so the wait sits behind the
      * ambers instead of stalling on green. */
@@ -466,14 +467,25 @@ export default function RevMatch() {
           {tab === "dragstrip" && (
             <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
               <select
-                aria-label="Race type"
+                aria-label="Race distance"
                 style={{ ...inputStyle, width: "auto" }}
-                value={raceKey}
+                value={distanceMeters}
                 disabled={busy}
-                onChange={(e) => { setRaceKey(e.target.value); resetRace(); }}
+                onChange={(e) => { setDistanceMeters(Number(e.target.value)); resetRace(); }}
               >
-                {Object.entries(RACE_OPTIONS).map(([key, value]) => (
-                  <option key={key} value={key}>{value.label}</option>
+                <option value={201.168}>⅛ mile</option>
+                <option value={402.336}>¼ mile</option>
+              </select>
+
+              <select
+                aria-label="Starting speed"
+                style={{ ...inputStyle, width: "auto" }}
+                value={startingSpeedMph}
+                disabled={busy}
+                onChange={(e) => { setStartingSpeedMph(Number(e.target.value)); resetRace(); }}
+              >
+                {Array.from({ length: 8 }, (_, index) => index * 10).map((mph) => (
+                  <option key={mph} value={mph}>{mph === 0 ? "0 mph (standing start)" : `${mph} mph start`}</option>
                 ))}
               </select>
 

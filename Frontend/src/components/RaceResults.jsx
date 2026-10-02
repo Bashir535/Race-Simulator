@@ -12,7 +12,6 @@ import { C, F, RADIUS } from "../theme.js";
 import { formatMph, formatSeconds } from "../lib/units.ts";
 import {
   MILESTONE_EIGHTH,
-  MILESTONE_FINISH,
   MILESTONE_ZERO_TO_SIXTY,
   findMilestone,
 } from "../lib/raceModel.ts";
@@ -37,11 +36,10 @@ function StatBlock({ label, value, unit, color }) {
 }
 
 /* One car's column of authoritative figures. */
-function VehicleColumn({ result, color }) {
+function VehicleColumn({ result, color, startingSpeed = 0 }) {
   const name = result.name || "Vehicle";
   const zeroToSixty = findMilestone(result, MILESTONE_ZERO_TO_SIXTY);
   const eighth = findMilestone(result, MILESTONE_EIGHTH);
-  const finish = findMilestone(result, MILESTONE_FINISH);
 
   return (
     <div style={{ minWidth: 240, flex: 1 }}>
@@ -66,7 +64,7 @@ function VehicleColumn({ result, color }) {
           unit="mph"
           color={color}
         />
-        {zeroToSixty && (
+        {zeroToSixty && startingSpeed === 0 && (
           <StatBlock
             label="0–60 MPH"
             value={formatSeconds(zeroToSixty.elapsedSeconds)}
@@ -89,14 +87,6 @@ function VehicleColumn({ result, color }) {
               color={color}
             />
           </>
-        )}
-        {finish && (
-          <StatBlock
-            label="FINISH TRAP"
-            value={formatMph(finish.speedMetersPerSecond)}
-            unit="mph"
-            color={color}
-          />
         )}
       </div>
     </div>
@@ -134,8 +124,8 @@ export default function RaceResults({ response }) {
       </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 28, marginBottom: 14 }}>
-        <VehicleColumn result={response.vehicleA} color={C.orange} />
-        <VehicleColumn result={response.vehicleB} color={C.cyan} />
+        <VehicleColumn result={response.vehicleA} color={C.orange} startingSpeed={response.config?.startingSpeedMetersPerSecond} />
+        <VehicleColumn result={response.vehicleB} color={C.cyan} startingSpeed={response.config?.startingSpeedMetersPerSecond} />
       </div>
 
       {summary && (
