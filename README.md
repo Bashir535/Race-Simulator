@@ -98,3 +98,41 @@ mvn test
 
 The backend's PostgreSQL integration test runs through Testcontainers when
 Docker is available. Engine and backend service tests do not require Docker.
+
+### Current comparison and vehicle increment
+
+Select two cars, then use **Compare cars** to open a separate side-by-side specs
+screen. **Race these cars** returns to the strip with both selections preserved.
+The modification workbench and database-garage UI are removed; Garage retains its
+simple local saved-vehicle behavior. Previously created database snapshots are not deleted.
+
+Migration V11 adds the 2021 M3 Competition RWD, 2019 C63 S sedan, 2019 Z06 automatic
+standard-aero coupe and 2022 M8 Competition coupe: eight race-ready stock vehicles
+in total. Restart the backend to apply the migration. These are initial physics
+fixtures, not accuracy-certified models. Sources, estimates and missing comparison
+fields are recorded in `simulation-engine/REAL_VEHICLE_DATA.md`.
+
+Run `npm run check` for frontend model/client tests, type checks and production build.
+Use `mvn clean test` with Docker running to also verify migrations and persistence.
+Numerical regression tests are not independent proof of real-world accuracy.
+
+### Browser integration tests
+
+`npm run test:e2e` uses installed Google Chrome and a disposable backend at
+`http://localhost:18082/api/v1`. It starts/stops Vite on port 5175. Override
+`E2E_API_URL` if needed; the backend must permit origin `http://localhost:5175`.
+Never point these tests at a production database. Tests cover the dedicated
+comparison screen, mobile layout, stock requests, local garage, replay/reset and errors.
+See [Playwright web-server configuration](https://playwright.dev/docs/test-webserver).
+
+Example isolated setup (separate terminals, repository root):
+
+```bash
+docker run --detach --rm --name race-simulator-browser-tests --publish 127.0.0.1:55432:5432 --env POSTGRES_DB=race_qa --env POSTGRES_USER=race_qa --env POSTGRES_PASSWORD=race_qa_local_only postgres:17-alpine
+mvn package -DskipTests
+java -jar Backend/target/backend-0.1.0-SNAPSHOT.jar --server.port=18082 --spring.datasource.url=jdbc:postgresql://localhost:55432/race_qa --spring.datasource.username=race_qa --spring.datasource.password=race_qa_local_only --app.cors.allowed-origins=http://localhost:5175
+```
+
+Then run `npm run test:e2e` in another terminal. Stop that Java process with Ctrl+C
+and run `docker stop race-simulator-browser-tests` when done. This removes only the
+temporary test database, not your normal Docker Compose volume.

@@ -14,6 +14,14 @@ public class VehicleSpecMapper {
         String name = "%d %s %s %s".formatted(
                 trim.getModelYear(), model.getMake().getName(), model.getName(), trim.getTrimName());
 
+        if (transmission.getGearRatios().size() != transmission.getNumberOfGears()) {
+            throw new IllegalArgumentException("Vehicle is not simulation-ready: incomplete gear ratios");
+        }
+        var curve = new TorqueCurve(engine.getTorqueCurvePoints().stream()
+                .map(point -> new TorquePoint(point.getRpm(), point.getTorqueNm())).toList());
+        if (curve.points().firstKey() > engine.getIdleRpm() || curve.points().lastKey() < engine.getRedlineRpm()) {
+            throw new IllegalArgumentException("Vehicle is not simulation-ready: torque curve must cover idle through redline");
+        }
         return new VehicleSpec(
                 name,
                 spec.getMassKg(),
@@ -36,8 +44,6 @@ public class VehicleSpecMapper {
                 engine.getIdleRpm(),
                 engine.getShiftRpm(),
                 engine.getRedlineRpm(),
-                new TorqueCurve(engine.getTorqueCurvePoints().stream()
-                        .map(point -> new TorquePoint(point.getRpm(), point.getTorqueNm()))
-                        .toList()));
+                curve);
     }
 }

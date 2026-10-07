@@ -35,7 +35,7 @@ public record VehicleSpec(
         Objects.requireNonNull(launchProfile, "Launch profile is required");
         Objects.requireNonNull(torqueCurve, "Torque curve is required");
         gearRatios = List.copyOf(Objects.requireNonNull(gearRatios, "Gear ratios are required"));
-        if (gearRatios.isEmpty() || gearRatios.stream().anyMatch(ratio -> ratio == null || ratio <= 0.0)) {
+        if (gearRatios.isEmpty() || gearRatios.stream().anyMatch(ratio -> ratio == null || !Double.isFinite(ratio) || ratio <= 0.0)) {
             throw new IllegalArgumentException("At least one positive gear ratio is required");
         }
         requirePositive(massKg, "Mass");

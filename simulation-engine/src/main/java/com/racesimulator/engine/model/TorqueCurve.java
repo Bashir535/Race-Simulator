@@ -60,9 +60,22 @@ public final class TorqueCurve {
 
     /** Highest power represented by the piecewise-linear torque curve. */
     public double peakHorsepower() {
-        return points.keySet().stream()
-                .mapToDouble(this::horsepowerAt)
-                .max()
-                .orElseThrow();
+        double peak = 0;
+        var previous = points.firstEntry();
+        for (var point : points.entrySet()) {
+            peak = Math.max(peak, horsepowerAt(point.getKey()));
+            if (point.getKey() > previous.getKey()) {
+                double slope = (point.getValue() - previous.getValue()) / (point.getKey() - previous.getKey());
+                if (slope < 0) {
+                    double intercept = previous.getValue() - slope * previous.getKey();
+                    double stationaryRpm = -intercept / (2 * slope);
+                    if (stationaryRpm > previous.getKey() && stationaryRpm < point.getKey()) {
+                        peak = Math.max(peak, horsepowerAt(stationaryRpm));
+                    }
+                }
+            }
+            previous = point;
+        }
+        return peak;
     }
 }

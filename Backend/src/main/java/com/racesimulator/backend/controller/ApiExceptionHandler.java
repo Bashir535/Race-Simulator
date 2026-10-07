@@ -16,6 +16,11 @@ import java.util.UUID;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(org.springframework.web.bind.MissingRequestHeaderException.class)
+    public ResponseEntity<ApiErrorResponse> missingHeader(org.springframework.web.bind.MissingRequestHeaderException exception) {
+        return response(HttpStatus.BAD_REQUEST, "MISSING_HEADER", "Required request header is missing",
+                Map.of(exception.getHeaderName(), "is required"), false);
+    }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> invalidBody(MethodArgumentNotValidException exception) {
         Map<String, String> fields = new LinkedHashMap<>();

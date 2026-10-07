@@ -32,6 +32,7 @@ public record ValidationReport(
                     comparison.unit(),
                     comparison.percentError()));
         }
+        report.append("Timing conventions/conditions must match before claiming accuracy. Finish speed is instantaneous; published trap is a measurement-window average.\n");
         return report.toString();
     }
 }

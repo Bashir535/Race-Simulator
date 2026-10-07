@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/** Deterministic, fixed-time-step straight-line vehicle race simulator. */
+/** fixed-time straight-line vehicle race simulator. */
 public final class RaceSimulator {
     private static final double STANDARD_AIR_DENSITY_KG_PER_CUBIC_METER = 1.225;
     private static final double GRAVITY_METERS_PER_SECOND_SQUARED = 9.80665;
@@ -365,6 +365,7 @@ public final class RaceSimulator {
         double transmissionFactor = switch (vehicle.transmissionType()) {
             case MANUAL -> 1.000;
             case TORQUE_CONVERTER_AUTOMATIC -> 0.990;
+            case WET_CLUTCH_AUTOMATIC -> 1.000;
             case DUAL_CLUTCH -> 1.005;
         };
         double operatingFactor = 1.01 - 0.025 * normalizedRpm - 0.01 * speedFactor;
@@ -442,7 +443,9 @@ public final class RaceSimulator {
             VehicleState previous,
             VehicleState current,
             RaceConfig config) {
-        captureSpeedMilestone(run, "0-60 mph", SIXTY_MPH_METERS_PER_SECOND, previous, current);
+        if (config.startingSpeedMetersPerSecond() == 0.0) {
+            captureSpeedMilestone(run, "0-60 mph", SIXTY_MPH_METERS_PER_SECOND, previous, current);
+        }
 
         if (config.goal() instanceof DistanceRaceGoal distanceGoal) {
             if (distanceGoal.distanceMeters() >= RaceConfig.EIGHTH_MILE_METERS) {

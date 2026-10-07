@@ -115,6 +115,15 @@ a.abort();
 check("aborted caller cancels", (await p1) === "cancelled");
 check("other caller unaffected by peer abort", (await p2) === "completed");
 
+const alreadyAborted = new AbortController();
+alreadyAborted.abort();
+const priorHits = hits;
+try {
+  await simulateRace({}, alreadyAborted.signal);
+  check("already-aborted POST cancels", false);
+} catch (e) { check("already-aborted POST cancels", isCancelled(e)); }
+check("already-aborted POST never reaches server", hits === priorHits);
+
 /* --- network failure --------------------------------------------------- */
 server.close();
 await new Promise((r) => setTimeout(r, 60));
