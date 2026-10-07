@@ -16,6 +16,7 @@ import type {
   VehicleMake,
   VehicleModel,
   VehicleTrim,
+  GarageEntry, SavedRace, SavedVehicle, VehicleModifications, VehicleReadiness,
 } from "./types";
 
 const DEFAULT_BASE_URL = "http://localhost:8081/api/v1";
@@ -148,6 +149,7 @@ async function send<T>(url: string, init: RequestInit): Promise<T> {
   }
 
   try {
+    if (response.status === 204) return undefined as T;
     return (await response.json()) as T;
   } catch (cause) {
     throw new ApiError(
@@ -239,6 +241,35 @@ export function getVehicle(trimId: number, signal?: AbortSignal): Promise<Vehicl
   return get<VehicleDetail>(`/vehicles/${trimId}`, undefined, signal);
 }
 
+export function getVehicleReadiness(trimId: number, signal?: AbortSignal): Promise<VehicleReadiness> {
+  return get<VehicleReadiness>(`/vehicles/${trimId}/readiness`, undefined, signal);
+}
+
+// Anonymous capability, not an account. Losing browser storage loses access.
+function garageKey(): string {
+  const keyName = "revmatch:garage-key:v1";
+  let key = window.localStorage.getItem(keyName);
+  if (!key || !/^[a-f0-9]{64}$/.test(key)) {
+    key = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, "0")).join("");
+    window.localStorage.setItem(keyName, key);
+  }
+  return key;
+}
+
+async function garageRequest<T>(path: string, method = "GET", body?: unknown): Promise<T> {
+  return send<T>(buildUrl(`/garage${path}`), {
+    method,
+    headers: { Accept: "application/json", "Content-Type": "application/json", "X-Garage-Key": garageKey() },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+}
+export const listSavedItems = () => garageRequest<GarageEntry[]>("");
+export const getSavedItem = (id: string) => garageRequest<SavedRace | SavedVehicle>(`/${encodeURIComponent(id)}`);
+export const deleteSavedItem = (id: string) => garageRequest<void>(`/${encodeURIComponent(id)}`, "DELETE");
+export const saveRaceSnapshot = (request: RaceRequest) => garageRequest<GarageEntry>("/races", "POST", request);
+export const saveVehicleSnapshot = (trimId: number, modifications: VehicleModifications) =>
+  garageRequest<GarageEntry>("/vehicles", "POST", { trimId, modifications });
+
 /**
  * POST /races/simulate
  *
@@ -246,11 +277,13 @@ export function getVehicle(trimId: number, signal?: AbortSignal): Promise<Vehicl
  * and the caller already guards against double submission.
  */
 export function simulateRace(request: RaceRequest, signal?: AbortSignal): Promise<RaceResponse> {
+  if (signal?.aborted) return Promise.reject(new CancelledError());
   return withCancellation(
     send<RaceResponse>(buildUrl("/races/simulate"), {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify(request),
+      signal,
     }),
     signal,
   );

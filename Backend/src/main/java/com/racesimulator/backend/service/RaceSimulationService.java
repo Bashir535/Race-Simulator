@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class RaceSimulationService {
-    public static final String SIMULATION_VERSION = "0.1.0";
+    public static final String SIMULATION_VERSION = "0.2.0";
     private final VehicleTrimRepository trimRepository;
     private final VehicleSpecMapper vehicleSpecMapper;
 
@@ -30,8 +30,13 @@ public class RaceSimulationService {
         VehicleTrim trimB = load(request.vehicleBId());
         RaceConfig config = toConfig(request.race());
         var result = new RaceSimulator().simulate(
-                vehicleSpecMapper.toEngineSpec(trimA), vehicleSpecMapper.toEngineSpec(trimB), config);
+                modifications(request.modificationsA()).apply(vehicleSpecMapper.toEngineSpec(trimA)),
+                modifications(request.modificationsB()).apply(vehicleSpecMapper.toEngineSpec(trimB)), config);
         return toResponse(request.vehicleAId(), request.vehicleBId(), result);
+    }
+
+    private VehicleModifications modifications(RaceRequest.Modifications modifications) {
+        return modifications == null ? VehicleModifications.STOCK : modifications.toEngine();
     }
 
     private VehicleTrim load(Long id) {

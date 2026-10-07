@@ -48,6 +48,12 @@ export const F = {
 /* Square corners throughout — panels, inputs and buttons share this. */
 export const RADIUS = 0;
 
+export const actionStyle = {
+  background: C.panel, color: C.text, border: `1px solid ${C.line}`,
+  borderRadius: RADIUS, padding: "8px 12px", fontFamily: F.body,
+  fontSize: 12, cursor: "pointer",
+};
+
 export const inputStyle = {
   width: "100%",
   background: C.panelAlt,

@@ -7,7 +7,21 @@ import jakarta.validation.constraints.*;
 public record RaceRequest(
         @NotNull @Positive Long vehicleAId,
         @NotNull @Positive Long vehicleBId,
-        @NotNull @Valid RaceConfiguration race) {
+        @NotNull @Valid RaceConfiguration race,
+        @Valid Modifications modificationsA,
+        @Valid Modifications modificationsB) {
+
+    public RaceRequest(Long vehicleAId, Long vehicleBId, RaceConfiguration race) {
+        this(vehicleAId, vehicleBId, race, null, null);
+    }
+
+    public record Modifications(
+            @DecimalMin("0.8") @DecimalMax("1.3") double torqueMultiplier,
+            @PositiveOrZero double weightReductionKg) {
+        public com.racesimulator.engine.model.VehicleModifications toEngine() {
+            return new com.racesimulator.engine.model.VehicleModifications(torqueMultiplier, weightReductionKg);
+        }
+    }
 
     public enum GoalType { DISTANCE, SPEED }
 

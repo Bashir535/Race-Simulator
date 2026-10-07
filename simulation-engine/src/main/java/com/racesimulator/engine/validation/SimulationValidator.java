@@ -32,7 +32,7 @@ public final class SimulationValidator {
                         comparison("1/4 reported", "s", simulatedResult.finishTimeSeconds(), benchmark.quarterMileSeconds()),
                         comparison("1/4 no rollout", "s", simulatedResult.finishTimeSeconds(),
                                 benchmark.quarterMileSeconds() + benchmark.rolloutSeconds()),
-                        comparison("Trap speed", "mph", simulatedTrapSpeedMph, publishedTrapSpeedMph)));
+                        comparison("Finish vs trap (proxy)", "mph", simulatedTrapSpeedMph, publishedTrapSpeedMph)));
     }
 
     public PowerCurveValidation validatePowerCurve(
@@ -60,20 +60,22 @@ public final class SimulationValidator {
                 .flatMap(report -> report.comparisons().stream()
                         .filter(comparison -> comparison.metric().equals("0-60 no rollout")
                                 || comparison.metric().equals("1/4 no rollout")
-                                || comparison.metric().equals("Trap speed"))
+                                || comparison.metric().equals("Finish vs trap (proxy)"))
                         .map(comparison -> new LocatedMetric(report.vehicleName(), comparison)))
                 .toList();
         double mean = metrics.stream()
+                .filter(metric -> !metric.comparison().metric().equals("Finish vs trap (proxy)"))
                 .mapToDouble(metric -> Math.abs(metric.comparison().percentError()))
                 .average()
                 .orElseThrow();
         LocatedMetric worst = metrics.stream()
+                .filter(metric -> !metric.comparison().metric().equals("Finish vs trap (proxy)"))
                 .max(Comparator.comparingDouble(
                         metric -> Math.abs(metric.comparison().percentError())))
                 .orElseThrow();
         double zeroToSixtyMean = metricMean(metrics, "0-60 no rollout");
         double quarterMileMean = metricMean(metrics, "1/4 no rollout");
-        double trapSpeedMean = metricMean(metrics, "Trap speed");
+        double trapSpeedMean = metricMean(metrics, "Finish vs trap (proxy)");
         return new AggregateValidationReport(copy, mean,
                 zeroToSixtyMean, quarterMileMean, trapSpeedMean,
                 Math.abs(worst.comparison().percentError()), worst.vehicle(),

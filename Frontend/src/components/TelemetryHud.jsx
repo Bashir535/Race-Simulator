@@ -9,7 +9,7 @@
  * Every figure comes from a backend frame. The only arithmetic is the unit
  * conversion needed to print it.
  */
-import React, { forwardRef, useImperativeHandle, useRef } from "react";
+import React, { forwardRef, useId, useImperativeHandle, useRef } from "react";
 
 import { C, F, RADIUS } from "../theme.js";
 import { mpsToMph } from "../lib/units.ts";
@@ -18,22 +18,23 @@ const DIAL_START = -125;
 const DIAL_SWEEP = 250;
 
 function Dial({ label, unit, color, needleRef, valueRef, labels }) {
+  const gradientId = useId();
   return (
-    <div style={{ width: "min(150px, 38vw)", aspectRatio: "1", position: "relative", flex: "0 1 150px" }}>
+    <div data-gauge={label} style={{ width: "min(150px, 38vw)", aspectRatio: "1", position: "relative", flex: "0 1 150px" }}>
       <svg viewBox="0 0 160 160" aria-hidden="true" style={{ width: "100%", height: "100%", display: "block" }}>
         <defs>
-          <radialGradient id={`dial-${label}`} cx="50%" cy="42%" r="60%">
+          <radialGradient id={gradientId} cx="50%" cy="42%" r="60%">
             <stop offset="0" stopColor="#263944" />
             <stop offset=".72" stopColor="#101a20" />
             <stop offset="1" stopColor="#070c0f" />
           </radialGradient>
         </defs>
-        <circle cx="80" cy="80" r="74" fill={`url(#dial-${label})`} stroke="#78909c" strokeWidth="4" />
+        <circle cx="80" cy="80" r="74" fill={`url(#${gradientId})`} stroke="#78909c" strokeWidth="4" />
         <path d="M28 126 A68 68 0 1 1 132 126" fill="none" stroke={color} strokeWidth="5" opacity=".8" />
         {Array.from({ length: 21 }, (_, index) => {
           const angle = DIAL_START + (index / 20) * DIAL_SWEEP;
           const radians = (angle - 90) * Math.PI / 180;
-          const major = index % 4 === 0;
+          const major = index % 5 === 0;
           const outer = 68;
           const inner = major ? 57 : 62;
           return (
@@ -56,7 +57,7 @@ function Dial({ label, unit, color, needleRef, valueRef, labels }) {
         <circle cx="80" cy="80" r="8" fill="#263238" stroke="#9fb2bb" strokeWidth="2" />
       </svg>
       <div style={{ position: "absolute", left: 0, right: 0, bottom: 20, textAlign: "center" }}>
-        <div ref={valueRef} style={{ fontFamily: F.mono, fontSize: 22, lineHeight: 1, fontWeight: 700, color: "#fff", fontVariantNumeric: "tabular-nums" }}>0</div>
+        <div data-gauge-value ref={valueRef} style={{ fontFamily: F.mono, fontSize: 22, lineHeight: 1, fontWeight: 700, color: "#fff", fontVariantNumeric: "tabular-nums" }}>0</div>
         <div style={{ fontFamily: F.mono, fontSize: 9, color, letterSpacing: 1 }}>{unit}</div>
       </div>
       <div style={{ position: "absolute", left: 0, right: 0, top: 42, textAlign: "center", fontFamily: F.mono, fontSize: 9, color: "#9fb2bb", letterSpacing: 1 }}>{label}</div>
@@ -77,7 +78,7 @@ const TelemetryHud = forwardRef(function TelemetryHud({ name, color }, ref) {
   const shiftUntilRef = useRef(0);
 
   useImperativeHandle(ref, () => ({
-    update(telemetry, redlineRpm) {
+    update(telemetry) {
       if (speedRef.current) {
         speedRef.current.textContent = mpsToMph(telemetry.speedMetersPerSecond).toFixed(0);
       }
@@ -91,7 +92,8 @@ const TelemetryHud = forwardRef(function TelemetryHud({ name, color }, ref) {
         accelRef.current.textContent = telemetry.accelerationMetersPerSecondSquared.toFixed(1);
       }
       const speedFraction = Math.max(0, Math.min(1, mpsToMph(telemetry.speedMetersPerSecond) / 200));
-      const rpmCeiling = Math.max(1000, redlineRpm || 8000);
+      // Match the printed 0–8 (×1000) scale, not the vehicle's redline.
+      const rpmCeiling = 8000;
       const rpmFraction = Math.max(0, Math.min(1, telemetry.engineRpm / rpmCeiling));
       if (speedNeedleRef.current) speedNeedleRef.current.style.transform = `rotate(${DIAL_START + speedFraction * DIAL_SWEEP}deg)`;
       if (rpmNeedleRef.current) rpmNeedleRef.current.style.transform = `rotate(${DIAL_START + rpmFraction * DIAL_SWEEP}deg)`;

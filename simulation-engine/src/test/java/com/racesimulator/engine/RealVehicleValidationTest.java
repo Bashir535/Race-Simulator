@@ -77,7 +77,7 @@ class RealVehicleValidationTest {
     }
 
     @Test
-    void golfRRollRaceUsesSequentialEffectiveRatiosAndRealisticPerformance() {
+    void golfRRollRaceUsesSequentialEffectiveRatiosAndPreservesRegressionBaseline() {
         var golf = RealVehicleFixtures.golfRDualClutch();
         for (int index = 1; index < golf.gearRatios().size(); index++) {
             assertTrue(golf.gearRatios().get(index) < golf.gearRatios().get(index - 1),
@@ -90,7 +90,8 @@ class RealVehicleValidationTest {
                 RaceConfig.rollRace(40.0 * 0.44704, 120.0 * 0.44704,
                         RoadSurface.DRY_ASPHALT));
 
-        System.out.printf("Golf R 40-120 mph validation: %.2f s%n",
+        // Regression guard only: this range is not an independently measured benchmark.
+        System.out.printf("Golf R 40-120 mph regression baseline: %.2f s%n",
                 race.vehicleA().finishTimeSeconds());
         assertTrue(race.vehicleA().finishTimeSeconds() >= 9.0);
         assertTrue(race.vehicleA().finishTimeSeconds() <= 15.0);

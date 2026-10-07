@@ -188,6 +188,40 @@ export interface RaceRequest {
   vehicleAId: number;
   vehicleBId: number;
   race: RaceConfiguration;
+  modificationsA?: VehicleModifications;
+  modificationsB?: VehicleModifications;
+}
+
+export interface VehicleModifications {
+  torqueMultiplier: number;
+  weightReductionKg: number;
+}
+
+export interface GarageEntry { id: string; kind: "VEHICLE" | "RACE"; label: string; createdAt: string }
+export interface SavedRace {
+  schemaVersion: number;
+  simulationVersion: string;
+  request: RaceRequest;
+  stockVehicleA: VehicleDetail;
+  stockVehicleB: VehicleDetail;
+  response: RaceResponse;
+  evidenceA: VehicleReadiness;
+  evidenceB: VehicleReadiness;
+}
+export interface SavedVehicle {
+  schemaVersion: number;
+  simulationVersion: string;
+  stockVehicle: VehicleDetail;
+  modifications: VehicleModifications;
+  evidence: VehicleReadiness;
+}
+export interface VehicleReadiness {
+  simulationReady: boolean;
+  accuracyStatus: string;
+  blockers: string[];
+  assumptions: string[];
+  benchmarkSources: string[];
+  evidence: { provider: string; url: string | null; status: string; confidence: string; notes: string | null }[];
 }
 
 /* ---------------------------------------------------------------------- */

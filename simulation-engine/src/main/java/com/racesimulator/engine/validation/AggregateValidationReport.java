@@ -18,8 +18,8 @@ public record AggregateValidationReport(
 
     public String asText() {
         return String.format(
-                "Aggregate validation: %d vehicles, mean absolute error %.2f%% "
-                        + "(0-60 %.2f%%, 1/4-mile %.2f%%, trap %.2f%%), "
+                "Standing-start timing diagnostics: %d vehicles, timing mean absolute error %.2f%% "
+                        + "(0-60 %.2f%%, 1/4-mile %.2f%%; finish-vs-trap proxy %.2f%% excluded from mean), "
                         + "worst error %.2f%% (%s, %s)%n",
                 vehicleReports.size(), meanAbsolutePercentError,
                 zeroToSixtyMeanAbsolutePercentError,

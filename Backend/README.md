@@ -85,7 +85,53 @@ when needed:
 
 Do not commit production credentials.
 
-## Tests
+## Deferred modifications and anonymous garage APIs (engine model version 0.2.0)
+
+These APIs remain available for future work, but are no longer exposed in the
+frontend. The current UI sends stock race requests and uses its original local
+saved-vehicle garage. V10 and existing snapshots are retained to avoid destroying
+saved data or rewriting migration history.
+
+- Optional `modificationsA` / `modificationsB` on race requests contain
+  `{ "torqueMultiplier": 1.1, "weightReductionKg": 50 }`. Omission means stock.
+  Torque scaling is restricted to 0.8–1.3; mass reduction is 0–15% of stock mass.
+  These are bounded what-if assumptions, not validated aftermarket upgrades.
+  Power is derived from torque/RPM; stock database rows are never modified.
+- `GET /api/v1/vehicles/{id}/readiness` returns structural readiness, known
+  assumptions and stored source/confidence metadata. The mapper rejects incomplete
+  gear sets and torque curves that do not cover idle through redline. Readiness is
+  not a real-world accuracy certification. External data ingestion remains future work.
+- Migration V10 adds `garage_snapshots` (UUID, owner hash, kind, label, JSONB payload,
+  timestamp). Older migrations are untouched. Run normal backend startup to apply V10.
+- Garage requests require `X-Garage-Key`: a cryptographically random 64-character
+  hexadecimal browser capability. The server stores its SHA-256 hash. This is not
+  account authentication: anyone possessing the key can access that garage; losing
+  browser storage loses access. Use HTTPS, account ownership, rate limiting, retention
+  and recovery policies before a public deployment. Do not log the key.
+
+| Method/path under `/api/v1` | Purpose |
+| --- | --- |
+| `GET /garage` | Latest 100 snapshot summaries for this key |
+| `GET /garage/{id}` | Owner-scoped immutable snapshot |
+| `POST /garage/vehicles` | Body `{trimId, modifications}`; saves stock data and separate modifications |
+| `POST /garage/races` | RaceRequest body; recomputes server-side and saves inputs, source metadata, version and timeline |
+| `DELETE /garage/{id}` | Owner-scoped deletion (204); unknown or other-owner IDs return 404 |
+
+Saving a race currently reruns its request against the catalog at save time. It does
+not accept client-provided outcomes. If catalog data changed since the displayed run,
+the saved run can differ. The saved recording thereafter remains unchanged. Build
+loading uses the current catalog plus saved modifications; viewing a snapshot uses
+the historical data. Existing localStorage vehicle bookmarks are kept separately,
+not silently migrated or deleted. Browser storage failures are surfaced in the UI.
+
+## Tests (including persistence)
+
+V11 adds four stock physics fixtures (M3 Competition RWD, C63 S sedan, Z06 automatic
+standard-aero coupe and M8 Competition coupe). Its sources and estimates are in
+`simulation-engine/REAL_VEHICLE_DATA.md`. The C63 MCT uses the new
+`WET_CLUTCH_AUTOMATIC` classification; it is not a DCT. The existing simplified
+shift-interruption model still applies. Integration tests check all four at
+0/40/70 mph over both supported distances and retain the original vehicle regressions.
 
 Run the complete reactor from the repository root:
 

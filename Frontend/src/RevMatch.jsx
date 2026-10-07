@@ -9,6 +9,7 @@ import {
 
 import { C, F, RADIUS, inputStyle } from "./theme.js";
 import { ApiError, NetworkError, describeError, isCancelled, simulateRace } from "./lib/api/client.ts";
+import CompareScreen from "./components/CompareScreen.jsx";
 import {
   distanceRaceOption, ROAD_SURFACES, buildRaceRequest, chartRows,
   progressOf, telemetryAt, timelineDuration,
@@ -84,7 +85,7 @@ const Lane = React.forwardRef(function Lane({ name, color, running }, ref) {
     setProgress(fraction) {
       const clamped = Math.min(1, Math.max(0, fraction || 0));
       if (carRef.current) {
-        carRef.current.style.left = `calc(${clamped * 100}% - 19px)`;
+        carRef.current.style.left = `calc(${clamped * 100}% - ${clamped * 82}px)`;
       }
     },
   }), []);
@@ -102,7 +103,7 @@ const Lane = React.forwardRef(function Lane({ name, color, running }, ref) {
       <div
         ref={carRef}
         style={{
-          position: "absolute", top: "50%", left: "calc(0% - 41px)",
+          position: "absolute", top: "50%", left: "0px",
           transform: "translateY(-50%)", transition: running ? "none" : "left .35s ease",
           display: "flex", alignItems: "center", gap: 4,
         }}
@@ -193,17 +194,10 @@ export default function RevMatch() {
   const responseRef = useRef(null);
   const option = useMemo(() => distanceRaceOption(distanceMeters, startingSpeedMph), [distanceMeters, startingSpeedMph]);
   const optionRef = useRef(option);
-  const redlinesRef = useRef({ a: null, b: null });
 
   useEffect(() => { optionRef.current = option; }, [option]);
   useEffect(() => { responseRef.current = response; }, [response]);
 
-  useEffect(() => {
-    redlinesRef.current = {
-      a: laneA.detail.data?.engine?.redlineRpm ?? null,
-      b: laneB.detail.data?.engine?.redlineRpm ?? null,
-    };
-  }, [laneA.detail.data, laneB.detail.data]);
 
   const clearTimers = useCallback(() => {
     timersRef.current.forEach(clearTimeout);
@@ -235,8 +229,8 @@ export default function RevMatch() {
     laneARef.current?.setProgress(progressA);
     laneBRef.current?.setProgress(progressB);
     trackRef.current?.setProgress(Math.max(progressA, progressB));
-    hudARef.current?.update(a, redlinesRef.current.a);
-    hudBRef.current?.update(b, redlinesRef.current.b);
+    hudARef.current?.update(a);
+    hudBRef.current?.update(b);
   }, []);
 
   const handleComplete = useCallback(() => {
@@ -293,6 +287,7 @@ export default function RevMatch() {
     setRequestStatus("idle");
     setRaceError(null);
     setResponse(null);
+    responseRef.current = null;
     setResultsVisible(false);
     setTreeStage(-1);
     restartPlayback();
@@ -302,6 +297,9 @@ export default function RevMatch() {
     hudARef.current?.reset();
     hudBRef.current?.reset();
   }, [clearTimers, restartPlayback]);
+
+  // Catalog selection must invalidate old playback and old result labels.
+  useEffect(() => { resetRace(); }, [trimIdA, trimIdB, resetRace]);
 
   function runRace() {
     if (!canRace) return;
@@ -440,8 +438,10 @@ export default function RevMatch() {
           outline-offset: 2px;
         }
         select option, select optgroup { background: ${C.panel}; }
+        *, *::before, *::after { box-sizing: border-box; }
+        .rb-grid > * { min-width: 0; }
         @media (max-width: 720px) {
-          .rb-grid { grid-template-columns: 1fr !important; }
+          .rb-grid { grid-template-columns: minmax(0, 1fr) !important; }
           .rb-strip { flex-direction: column !important; align-items: stretch !important; gap: 14px !important; }
           .rb-strip > :first-child { align-self: center; }
         }
@@ -567,7 +567,10 @@ export default function RevMatch() {
           </TabButton>
         </div>
 
-        {tab === "garage" ? (
+        {tab === "compare" ? (
+          <CompareScreen a={laneA.detail.data} b={laneB.detail.data}
+            onBack={() => { setTab("dragstrip"); window.scrollTo(0, 0); }} />
+        ) : tab === "garage" ? (
           <GarageTab
             garage={garage}
             popular={popular}
@@ -639,6 +642,14 @@ export default function RevMatch() {
                 onSaveToGarage={saveTrim("b")} garage={garage}
                 onLoadFromGarage={loadTrimInto(laneB)} savedFlash={savedFlash.b}
               />
+            </div>
+
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <button type="button" disabled={!laneA.detail.data || !laneB.detail.data || busy}
+                style={{ ...controlButton(Boolean(laneA.detail.data && laneB.detail.data && !busy)), padding: "12px 28px" }}
+                onClick={() => { resetRace(); setTab("compare"); window.scrollTo(0, 0); }}>
+                Compare cars
+              </button>
             </div>
 
             {/* The simulation could not be run. */}
